@@ -99,7 +99,7 @@ Module Playground1.
 
 Inductive nat : Type :=
   | O : nat
-  | S : nat → nat.
+  | S : nat -> nat.
 
 Definition pred (n : nat) : nat :=
   match n with
@@ -222,6 +222,13 @@ Example test_ble_nat3: (ble_nat 4 2) = false.
 Proof. simpl. reflexivity. Qed.
 
 (*plactice blt_nat*)
+Definition xorb (b1 b2 : bool) : bool :=
+  match b1, b2 with
+  | true, true => false
+  | false, false => false
+  | _, _ => true
+  end.
+
 Definition blt_nat (n m : nat) : bool := 
   xorb (beq_nat n m) (ble_nat n m).
 
@@ -248,3 +255,322 @@ Eval simpl in (forall n:nat, n + 0 = n).
 
 Eval simpl in (forall n:nat, 0 + n = n).
 (*end plactice*)
+
+Theorem plus_O_n'' : forall n:nat, 
+  0 + n = n.
+Proof.
+  intros n. reflexivity. Qed.
+
+Theorem plus_1_l : forall n:nat, 
+  1 + n = S n.
+Proof.
+  intros n. reflexivity. Qed.
+
+Theorem mult_0_l : forall n:nat, 
+  0 * n = 0.
+Proof.
+  intros n. reflexivity. Qed.
+
+Theorem plus_id_example : forall n m:nat,
+  n = m -> n + n = m + m.
+Proof.
+  intros n m. 
+  intros H. 
+  rewrite -> H. 
+  reflexivity. Qed.
+
+(*plactice plus_id_exercise*)
+Theorem plus_id_exercise : forall n m o : nat,
+  n = m -> m = o -> n + m = m + o.
+Proof.
+  intros n m o.
+  intros H1.
+  intros H2.
+  rewrite -> H1.
+  rewrite <- H2.
+  reflexivity. Qed.
+(*end plactice plus_id_exercise*)
+
+Theorem mult_0_plus : forall n m : nat,
+  (0 + n)* m = n * m.
+Proof.
+  intros n m.
+  rewrite -> plus_0_n.
+  reflexivity. Qed.
+
+(*plactice mult_1_plus*)
+Theorem mult_1_plus : forall n m : nat,
+  (1 + n) * m = m + (n * m).
+Proof.
+  intros n m.
+  simpl.
+  reflexivity. Qed.
+(*end plactice mult_1_plus*)
+
+Theorem plus_1_neq_0_firsttry : forall n : nat,
+  Playground2.beq_nat (n + 1) 0 = false.
+Proof.
+  intros n. destruct n as [| n'].
+    simpl; reflexivity.
+    reflexivity. Qed.
+  
+Theorem plus_1_neq_0 : forall n : nat,
+  beq_nat (n + 1) 0 = false.
+Proof.
+  intros n. destruct n as [| n'].
+    reflexivity.
+    reflexivity. Qed.
+
+Theorem negb_involutive : forall b : bool,
+  negb (negb b) = b.
+Proof.
+  intros b. destruct b as [|].
+    reflexivity.
+    reflexivity. Qed.
+
+(*plactice zero_nbeq_plus_1*)
+Theorem zero_nbeq_plus_1 : forall n : nat,
+  Playground2.beq_nat 0 (n + 1) = false.
+Proof.
+  intros n. destruct n as [| n'].
+    simpl; reflexivity.
+    simpl; reflexivity. Qed.
+(*end plactice zero_nbeq_plus_1*)
+
+(*definition of "Case"*)
+Require String. Open Scope string_scope.
+(*caseの定義ssreflectをインポートしてないので定義しているだけ*)
+
+Ltac move_to_top x :=
+  match reverse goal with
+  | H : _ |- _ => try move x after H
+  end.
+
+Tactic Notation "assert_eq" ident(x) constr(v) :=
+  let H := fresh in
+  assert (x = v) as H by reflexivity;
+  clear H.
+
+Tactic Notation "Case_aux" ident(x) constr(name) :=
+  first [
+    set (x := name); move_to_top x
+  | assert_eq x name; move_to_top x
+  | fail 1 "because we are working on a different case" ].
+
+Tactic Notation "Case" constr(name) := Case_aux Case name.
+Tactic Notation "SCase" constr(name) := Case_aux SCase name.
+Tactic Notation "SSCase" constr(name) := Case_aux SSCase name.
+Tactic Notation "SSSCase" constr(name) := Case_aux SSSCase name.
+Tactic Notation "SSSSCase" constr(name) := Case_aux SSSSCase name.
+Tactic Notation "SSSSSCase" constr(name) := Case_aux SSSSSCase name.
+Tactic Notation "SSSSSSCase" constr(name) := Case_aux SSSSSSCase name.
+Tactic Notation "SSSSSSSCase" constr(name) := Case_aux SSSSSSSCase name.
+(*end definition of "Case"*)
+
+Theorem andb_true_elim1 : forall b c : bool,
+  andb b c = true -> b = true.
+Proof.
+  intros b c H.
+  destruct b.
+  Case "b = true".
+    reflexivity.
+  Case "b = false".
+    rewrite <- H. reflexivity. Qed.
+
+(*plactice andb_true_elim2*)
+Theorem andb_true_elim2 : forall b c : bool,
+  andb b c = true -> c = true.
+Proof.
+  intros b c.
+  destruct b.
+    destruct c.
+      simpl.
+      reflexivity.
+      simpl.
+      intros H.
+      exact H.
+    destruct c.
+      simpl.
+      intros H.
+      discriminate H. (*矛盾から導くやつ*)
+      simpl.
+      intros H.
+      discriminate H.
+Qed.
+(*end plactice andb_true_elim2*)
+
+Theorem plus_0_r : forall n : nat, n + 0 = n.
+Proof.
+  intros n.
+  induction n as [| n'].
+  Case "n = 0". reflexivity.
+  Case "n = S n'". simpl. rewrite -> IHn'. reflexivity.
+Qed.
+
+Theorem minus_diag : forall n,
+  minus n n = 0.
+Proof.
+  intros n. induction n as [| n'].
+  Case "n = 0".
+    simpl. reflexivity.
+  Case "n = S n'".
+    simpl. rewrite -> IHn'. reflexivity. Qed.
+
+(*plactice recommended. basic_induction*)
+Theorem mult_0_r : forall n : nat,
+  n * 0 = 0.
+Proof.
+  intros n.
+  induction n as [| n'].
+  Case "n = 0". reflexivity.
+  Case "n = S n'". simpl.
+  rewrite -> IHn'. reflexivity.
+Qed.
+(*end plactice recommended. basic_induction*)
+
+Theorem plus_n_Sm : forall n m : nat,
+  S (n + m) = n + (S m).
+Proof.
+  intros n m.
+  induction n as [| n'].
+  Case "n = 0". simpl. reflexivity.
+  Case "n = S n'". simpl. rewrite -> IHn'. reflexivity.
+Qed.
+
+Theorem plus_comm : forall n m : nat,
+  n + m = m + n.
+Proof.
+  intros n m.
+  induction n as [| n'].
+  Case "n = 0". 
+    simpl.
+    rewrite plus_0_r. reflexivity.
+  Case "n = n'".
+    rewrite <- plus_n_Sm.
+    rewrite <- IHn'.
+    rewrite plus_n_Sm.
+    simpl.
+    rewrite plus_n_Sm.
+    reflexivity.
+Qed.
+
+(*plactice double_plus*)
+Fixpoint double (n : nat) :=
+  match n with
+  | 0 => 0
+  | S n' => S (S (double n'))
+  end.
+(*end plactice double_plus*)
+
+(*plactice double_plus*)
+Lemma double_plus : forall n, double n = n + n.
+Proof.
+  intros n.
+  induction n as [| n'].
+  Case "n = 0".
+    simpl. reflexivity.
+  Case "n = n'".
+    simpl.
+    rewrite IHn'.
+    rewrite <- plus_n_Sm. reflexivity.
+Qed.
+(*end plactice double_plus*)
+
+(*plactice destruct_induction*)
+(*destructとinductionの違いは？*)
+(*destructは再帰的に定義されている型の変数をそれぞれの場合に分けるだけ*)
+(*inductionは分けたあと、再帰ステップでは仮定が追加される*)
+(*end plactice destruct_induction*)
+
+Theorem plus_assoc' : forall n m p : nat,
+  n + (m + p) = (n + m) + p.
+Proof. intros n m p. induction n as [| n']. reflexivity.
+  simpl. rewrite -> IHn'. reflexivity. Qed.
+
+Theorem plus_assoc: forall n m p : nat,
+  n + (m + p) = (n + m) + p.
+Proof.
+  intros n m p.
+  induction n as [| n'].
+    Case "n = 0".
+      reflexivity.
+    Case "n = n'".
+      simpl.
+      rewrite -> IHn'.
+      reflexivity.
+Qed.
+
+(*plactice beq_net_refl*)
+Theorem beq_na_refl : forall n : nat,
+  true = Playground2.beq_nat n n.
+Proof.
+  intros n.
+  induction n as [| n'].
+  Case "n = 0".
+    simpl.
+    reflexivity.
+  Case "n = S n'".
+    simpl.
+    rewrite <- IHn'.
+    reflexivity.
+Qed.
+(*end plactice beq_net_refl*)
+
+(*plactice plus_comm_informal*)
+(*end plactice plus_comm_informal*)
+
+(*plactice beq_nat_refl_informal*)
+(*end plactice beq_nat_refl_informal*)
+
+(*plactice beq_nat_refl*)
+(*end plactice beq_nat_refl*)
+
+Theorem mult_0_plus' : forall n m : nat,
+  (0 + n) * m = n * m.
+Proof.
+  intros n m.
+  assert(H: 0 + n = n).
+    Case "Proof of assertion". reflexivity.
+  rewrite H.
+  reflexivity.
+Qed.
+
+Theorem plus_rearrange : forall n m p q : nat,
+  (n + m) + (p + q) = (m + n) + (p + q).
+Proof.
+  intros n m p q.
+  assert (H: n + m = m + n).
+    Case "Proof of assertion".
+    rewrite -> plus_comm. reflexivity.
+  rewrite -> H. reflexivity. Qed.
+
+Theorem mult_0_plus' : ∀ n m : nat,
+  (0 + n) * m = n * m.
+Proof.
+  intros n m.
+  assert (H: 0 + n = n).
+    Case "Proof of assertion". reflexivity.
+  rewrite -> H.
+  reflexivity. Qed.
+
+(*plactice mult_comm*)
+Theorem plus_swap : forall n m p : nat,
+  n + (m + p) = m + (n + p).
+Proof.
+  intros n m p.
+  assert (H: n + (m + p) = n + m + p).
+    rewrite -> plus_assoc.
+    reflexivity.
+  assert (H2: m + (n + p) = m + n + p).
+    rewrite -> plus_assoc.
+    reflexivity.
+  assert (H3: n + m = m + n).
+    rewrite -> plus_comm.
+    reflexivity.
+  rewrite -> H.
+  rewrite -> H2.
+  rewrite -> H3.
+  reflexivity.
+Qed.
+
+(*end plactice mult_comm*)
