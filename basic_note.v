@@ -174,10 +174,10 @@ Example test_mult1: (mult 3 3) = 9.
 Proof. simpl. reflexivity. Qed.
 
 (*plactice factorial*)
-Fixpoint factrial (n : nat) : nat :=
+Fixpoint factorial (n : nat) : nat :=
   match n with
   | 0 => 1
-  | S n' => mult n (factrial n')
+  | S n' => mult n (factorial n')
   end.
 
 Example test_factorial1: (factorial 3) = 6.
@@ -240,12 +240,12 @@ Example test_blt_nat3: (blt_nat 4 2) = false.
 Proof. simpl. reflexivity. Qed.
 (*end plactice blt_nat*)
 
-Theorem plus_O_n : forall n:nat, 
+Theorem plus_0_n : forall n:nat, 
   0 + n = n.
 Proof.
   simpl. reflexivity. Qed.
 
-Theorem plus_O_n' : forall n:nat, 
+Theorem plus_0_n' : forall n:nat, 
   0 + n = n.
 Proof.
   reflexivity. Qed.
@@ -308,7 +308,7 @@ Proof.
 (*end plactice mult_1_plus*)
 
 Theorem plus_1_neq_0_firsttry : forall n : nat,
-  Playground2.beq_nat (n + 1) 0 = false.
+  beq_nat (n + 1) 0 = false.
 Proof.
   intros n. destruct n as [| n'].
     simpl; reflexivity.
@@ -330,7 +330,7 @@ Proof.
 
 (*plactice zero_nbeq_plus_1*)
 Theorem zero_nbeq_plus_1 : forall n : nat,
-  Playground2.beq_nat 0 (n + 1) = false.
+  beq_nat 0 (n + 1) = false.
 Proof.
   intros n. destruct n as [| n'].
     simpl; reflexivity.
@@ -339,7 +339,6 @@ Proof.
 
 (*definition of "Case"*)
 Require String. Open Scope string_scope.
-(*caseの定義ssreflectをインポートしてないので定義しているだけ*)
 
 Ltac move_to_top x :=
   match reverse goal with
@@ -399,7 +398,8 @@ Proof.
 Qed.
 (*end plactice andb_true_elim2*)
 
-Theorem plus_0_r : forall n : nat, n + 0 = n.
+Theorem plus_0_r : forall n : nat, 
+  n + 0 = n.
 Proof.
   intros n.
   induction n as [| n'].
@@ -445,7 +445,7 @@ Proof.
   Case "n = 0". 
     simpl.
     rewrite plus_0_r. reflexivity.
-  Case "n = n'".
+  Case "n = S n'".
     rewrite <- plus_n_Sm.
     rewrite <- IHn'.
     rewrite plus_n_Sm.
@@ -469,7 +469,7 @@ Proof.
   induction n as [| n'].
   Case "n = 0".
     simpl. reflexivity.
-  Case "n = n'".
+  Case "n = S n'".
     simpl.
     rewrite IHn'.
     rewrite <- plus_n_Sm. reflexivity.
@@ -484,7 +484,10 @@ Qed.
 
 Theorem plus_assoc' : forall n m p : nat,
   n + (m + p) = (n + m) + p.
-Proof. intros n m p. induction n as [| n']. reflexivity.
+Proof. 
+  intros n m p. 
+  induction n as [| n']. 
+  reflexivity.
   simpl. rewrite -> IHn'. reflexivity. Qed.
 
 Theorem plus_assoc: forall n m p : nat,
@@ -494,7 +497,7 @@ Proof.
   induction n as [| n'].
     Case "n = 0".
       reflexivity.
-    Case "n = n'".
+    Case "n = S n'".
       simpl.
       rewrite -> IHn'.
       reflexivity.
@@ -502,7 +505,7 @@ Qed.
 
 (*plactice beq_net_refl*)
 Theorem beq_na_refl : forall n : nat,
-  true = Playground2.beq_nat n n.
+  true = beq_nat n n.
 Proof.
   intros n.
   induction n as [| n'].
@@ -544,15 +547,6 @@ Proof.
     rewrite -> plus_comm. reflexivity.
   rewrite -> H. reflexivity. Qed.
 
-Theorem mult_0_plus' : ∀ n m : nat,
-  (0 + n) * m = n * m.
-Proof.
-  intros n m.
-  assert (H: 0 + n = n).
-    Case "Proof of assertion". reflexivity.
-  rewrite -> H.
-  reflexivity. Qed.
-
 (*plactice mult_comm*)
 Theorem plus_swap : forall n m p : nat,
   n + (m + p) = m + (n + p).
@@ -573,4 +567,60 @@ Proof.
   reflexivity.
 Qed.
 
+Theorem mult_1_r: forall n : nat,
+  n * 1 = n.
+Proof.
+  intros n.
+  induction n as [| n'].
+  Case "n = 0".
+    simpl. reflexivity.
+  Case "n = S n'".
+    simpl.
+    rewrite IHn'. reflexivity. Qed.
+
+Theorem mult_succ_r : forall m n : nat,
+  n + n * m = n * S m.
+Proof.
+  intros m n.
+  induction n as [| n'].
+  Case "n = 0".
+    simpl. reflexivity.
+  Case "n = S n'".
+    simpl.
+    rewrite <- IHn'.
+    rewrite plus_swap.
+    reflexivity.
+Qed.
+
+Theorem mult_comm : forall m n : nat,
+  m * n = n * m.
+Proof.
+  intros m n.
+  induction m as [| m'].
+  Case "m = 0".
+    simpl.
+    rewrite mult_0_r.
+    reflexivity.
+  Case "m = S m'".
+    simpl.
+    rewrite IHm'.
+    rewrite mult_succ_r.
+    reflexivity.
+Qed.
 (*end plactice mult_comm*)
+
+(*plactice enenb_n__oddb_Sn*)
+Theorem evenb_n__oddb_Sn : forall n : nat,
+  evenb n = negb (evenb (S n)).
+Proof.
+  intros n.
+  induction n as [| n'].
+  Case "n = 0".
+    simpl. reflexivity.
+  Case "n = S n'".
+    
+    simpl.
+    rewrite IHn'. simpl.
+  simpl.
+Admitted.
+
